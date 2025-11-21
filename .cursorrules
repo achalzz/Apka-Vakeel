@@ -1,0 +1,170 @@
+# LegalAI Project Rules
+
+## Project Overview
+LegalAI is an AI-powered legal rights awareness and document generation tool. It helps individuals understand their legal rights and generate professional legal documents.
+
+## Key Principles
+
+### 1. Accessibility First
+- Use plain language, avoid legal jargon in UI
+- Make the tool usable by non-lawyers
+- Clear, simple interface
+- Mobile-responsive design
+
+### 2. Legal Accuracy
+- Always include appropriate disclaimers
+- Never claim to replace professional legal counsel
+- Be clear about limitations
+- Provide accurate information
+
+### 3. User Experience
+- Fast loading times
+- Clear feedback (loading, success, error states)
+- Intuitive navigation
+- Helpful guidance at each step
+
+### 4. Code Quality
+- Use functional React components with hooks
+- Follow service layer pattern for API calls
+- Keep components focused and reusable
+- Use Tailwind utility classes for styling
+- Include error handling for all async operations
+
+## File Structure Patterns
+
+### Components
+- Place reusable components in `src/components/`
+- Use PascalCase for component files
+- Keep components focused on single responsibility
+
+### Pages
+- Place page components in `src/pages/`
+- Each route should have its own page component
+- Pages compose components and handle page-level state
+
+### Services
+- Place API/service logic in `src/services/`
+- Services handle all external API calls
+- Keep business logic in services, not components
+- Use async/await pattern
+
+### Styling
+- Use Tailwind CSS utility classes
+- Custom component classes defined in `index.css`
+- Use color system from `tailwind.config.js`
+- Maintain consistent spacing and typography
+
+## Code Patterns
+
+### State Management
+- Use useState for component-level state
+- Use local state, not global state (unless needed)
+- Consider Context API for shared state if needed
+
+### Async Operations
+```javascript
+const handleSubmit = async (e) => {
+  setLoading(true)
+  setError(null)
+  try {
+    const result = await service.call()
+    setResult(result)
+  } catch (err) {
+    setError(err.message)
+  } finally {
+    setLoading(false)
+  }
+}
+```
+
+### Error Handling
+- Always wrap async operations in try-catch
+- Display user-friendly error messages
+- Log errors for debugging (in development)
+
+### Loading States
+- Show loading indicator during async operations
+- Disable form inputs while loading
+- Use consistent loading UI patterns
+
+## AI Integration
+
+### Current: Mock Services
+- Services in `src/services/` use mock data
+- Simulate API delays for realistic UX
+- Ready to replace with real API calls
+
+### Future: Real AI Integration
+- Update services to call actual AI APIs
+- Use environment variables for API keys
+- Implement proper prompt engineering
+- Handle API errors gracefully
+- Consider rate limiting
+
+## Document Generation
+
+### Supported Types
+- Contracts, Letters, NDAs, Wills, Power of Attorney
+- Lease Agreements, Employment Contracts, Invoices
+- Cease and Desist, Complaints, Settlements, Partnerships
+
+### Pattern
+- User selects document type
+- Provides details
+- Service generates document
+- User can preview and download
+
+## Legal Disclaimers
+
+### Always Include
+- Informational purposes only
+- Not legal advice
+- Consult attorney for complex matters
+- Review documents before use
+- Laws vary by jurisdiction
+
+## Testing Considerations
+
+### Manual Testing
+- Test all document types
+- Test with various legal scenarios
+- Verify error handling
+- Check mobile responsiveness
+
+### Future Automated Testing
+- Unit tests for services
+- Component tests
+- Integration tests
+- E2E tests
+
+## Deployment
+
+### Development
+- Run with `npm run dev`
+- Uses Vite dev server
+- Hot module replacement enabled
+
+### Production
+- Build with `npm run build`
+- Deploy static files to hosting
+- Configure environment variables
+- Use HTTPS in production
+
+## Important Notes
+
+- Never expose API keys in frontend code
+- Always validate user input
+- Include appropriate legal disclaimers
+- Keep user data secure (if storing)
+- Follow accessibility best practices
+- Optimize for performance
+
+## Future Enhancements
+
+- User authentication
+- Document editing
+- PDF/DOCX export
+- Multi-language support
+- Chat interface
+- Payment/subscription system
+
