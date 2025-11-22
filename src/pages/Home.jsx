@@ -86,25 +86,28 @@ function Home() {
         ref={problemRef}
         className={`card bg-3d bg-gradient-to-r from-primary-50 via-purple-50 to-pink-50 border-primary-200 mb-16 scroll-reveal ${problemRevealed ? 'revealed' : ''} layer-2`}
       >
-        <h2 className="text-2xl font-bold mb-4 text-gray-900">The Legal Services Gap</h2>
+        <h2 className="text-2xl font-bold mb-4 text-gray-900">India's Access to Justice Challenge</h2>
         <div className="grid md:grid-cols-2 gap-6">
           <div>
             <p className="text-gray-700 mb-4">
-              <strong>92%</strong> of low-income Americans receive inadequate or no legal help for their civil legal problems.
+              India's access to justice faces serious deficits: the ratio of judges to population is still extremely low, at about <strong>15 judges per 10 lakh (1 million) people</strong>, far below the recommended ~50 per million.
             </p>
             <p className="text-gray-700 mb-4">
-              Over <strong>40%</strong> of family law litigants appear in court without representation.
+              In the district judiciary alone (which is the main public interface), by 2023 there were approximately <strong>5,300 judicial vacancies</strong> against a sanctioned strength of about 25,081 judges — a shortfall of <strong>~21%</strong>.
             </p>
-            <p className="text-gray-700">
-              <strong>32%</strong> of the UK population had an unmet legal need in 2024.
+            <p className="text-gray-700 mb-4">
+              The backlog of court cases magnifies the gap: thousands of cases remain pending for years, and for the country overall, nearly <strong>44 million cases</strong> were pending a few years ago.
             </p>
           </div>
           <div>
             <p className="text-gray-700 mb-4">
-              Legal fees are "very onerous for a broad spectrum" of people, making professional legal services inaccessible.
+              On the legal aid front: although free legal aid is legally available to large segments of the population (around <strong>80% eligible</strong>) — the actual per capita spending is very small: about <strong>₹ 0.78 (less than one rupee)</strong> per person in 2020-21 via the national legal aid authority.
+            </p>
+            <p className="text-gray-700 mb-4">
+              Meanwhile, over the period 2022-25, the formal legal aid system reached <strong>44.22 lakh (4.422 million)</strong> eligible persons and resolved <strong>23.58 crore (235.8 million)</strong> cases through Lok Adalats.
             </p>
             <p className="text-gray-700">
-              Apka Vakeel bridges this gap by providing accessible, affordable, and immediate legal information and document generation.
+              <strong>Apka Vakeel</strong> bridges this gap by providing accessible, affordable, and immediate legal information and document generation to help citizens navigate the justice system.
             </p>
           </div>
         </div>
