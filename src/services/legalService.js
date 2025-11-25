@@ -3,11 +3,9 @@
 // Focused on Indian legal rights and protections
 
 import { INDIAN_RIGHTS, searchRights } from '../data/indianRights'
+import { callOpenAIChat, isOpenAIEnabled } from './openAIClient'
 
-// For now, this is a mock service that simulates AI responses
-// In production, this would connect to an actual AI API (OpenAI, Anthropic, etc.)
-
-const MOCK_DELAY = 2000 // Simulate API delay
+const MOCK_DELAY = 1500 // Simulate API delay when AI is unavailable
 
 // Helper function to extract keywords from situation
 const extractKeywords = (text) => {
@@ -97,151 +95,145 @@ const getRelevantRights = (situation) => {
   return { rightsText, relevantRights: allRelevantRights, keywords }
 }
 
-export const legalRightsService = {
-  async analyzeSituation(situation) {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY))
+const parseJSONFromAI = (content) => {
+  if (!content) return null
+  const trimmed = content.trim()
+  try {
+    return JSON.parse(trimmed)
+  } catch (error) {
+    const match = trimmed.match(/```json([\s\S]*?)```/i)
+    if (match && match[1]) {
+      try {
+        return JSON.parse(match[1].trim())
+      } catch (_err) {
+        return null
+      }
+    }
+    return null
+  }
+}
 
-    // Mock response - In production, this would be an actual AI API call
-    // Example: OpenAI GPT-4, Anthropic Claude, etc.
-    
-    // For demonstration, return a structured mock response with Indian rights
-    // Replace this with actual API integration:
-    /*
-    const response = await fetch('/api/legal/analyze', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ situation })
-    })
-    return await response.json()
-    */
+const buildMockResponse = (situation) => {
+  const { rightsText, relevantRights, keywords } = getRelevantRights(situation)
+  const lowerSituation = situation.toLowerCase()
 
-    // Get relevant rights based on situation
-    const { rightsText, relevantRights, keywords } = getRelevantRights(situation)
+  let optionsText = `Based on your situation, here are your available options under Indian law:\n\n`
 
-    // Build context-specific options
-    let optionsText = `Based on your situation, here are your available options under Indian law:\n\n`
-    
-    if (keywords.includes('marriage')) {
-      optionsText += `**Option 1: Marriage-Related Remedies**\n`
-      optionsText += `- File for divorce or separation if needed\n`
-      optionsText += `- Seek maintenance/alimony through family court\n`
-      optionsText += `- File complaint under Domestic Violence Act if facing abuse\n`
-      optionsText += `- Approach family court for custody of children\n`
-      optionsText += `- File complaint against dowry harassment\n\n`
-    }
-    
-    if (keywords.includes('consumer')) {
-      optionsText += `**Option 1: Consumer Remedies**\n`
-      optionsText += `- File complaint in Consumer Court (District/State/National)\n`
-      optionsText += `- Seek refund/replacement/compensation\n`
-      optionsText += `- Approach Consumer Helpline (1800-11-4000)\n`
-      optionsText += `- File online complaint on consumer portal\n\n`
-    }
-    
-    if (keywords.includes('employment')) {
-      optionsText += `**Option 1: Employment-Related Remedies**\n`
-      optionsText += `- File complaint with Labor Commissioner\n`
-      optionsText += `- Approach Industrial Tribunal/Labor Court\n`
-      optionsText += `- File complaint for sexual harassment (POSH Act)\n`
-      optionsText += `- Seek compensation for wrongful termination\n\n`
-    }
-    
-    if (keywords.includes('property')) {
-      optionsText += `**Option 1: Property-Related Remedies**\n`
-      optionsText += `- File case in civil court for property disputes\n`
-      optionsText += `- Approach Rent Control Tribunal for tenant issues\n`
-      optionsText += `- File complaint for illegal eviction\n`
-      optionsText += `- Seek injunction orders if needed\n\n`
-    }
-    
-    // Count specific options added
-    let optionNum = 1
-    if (keywords.length > 0) {
-      optionNum = keywords.filter(k => ['marriage', 'consumer', 'employment', 'property'].includes(k)).length + 1
-    }
-    
-    optionsText += `**Option ${optionNum}: Seek Legal Assistance**\n`
-    optionsText += `- Contact Legal Services Authority for free legal aid (if eligible)\n`
-    optionsText += `- Consult with a qualified lawyer\n`
-    optionsText += `- Approach District Legal Services Authority (DLSA)\n`
-    optionsText += `- Use Lok Adalat for speedy resolution\n\n`
-    
-    optionsText += `**Option ${optionNum + 1}: File Complaints**\n`
-    optionsText += `- File complaint with appropriate authority (police, consumer court, etc.)\n`
-    if (keywords.includes('rti') || situation.toLowerCase().includes('information')) {
-      optionsText += `- Use Right to Information (RTI) to get information from public authorities\n`
-    }
-    optionsText += `- Approach relevant regulatory bodies\n\n`
-    
-    optionsText += `**Option ${optionNum + 2}: Document Everything**\n`
-    optionsText += `- Keep records of all communications and documents\n`
-    optionsText += `- Maintain evidence (photos, videos, receipts, etc.)\n`
-    optionsText += `- Keep copies of all relevant legal documents\n\n`
-    
-    optionsText += `**Option ${optionNum + 3}: Approach Courts**\n`
-    optionsText += `- File a writ petition in High Court or Supreme Court (for fundamental rights violations)\n`
-    optionsText += `- Approach appropriate courts for civil/criminal matters\n`
+  if (keywords.includes('marriage')) {
+    optionsText += `**Option 1: Marriage-Related Remedies**\n`
+    optionsText += `- File for divorce or separation if needed\n`
+    optionsText += `- Seek maintenance/alimony through family court\n`
+    optionsText += `- File complaint under Domestic Violence Act if facing abuse\n`
+    optionsText += `- Approach family court for custody of children\n`
+    optionsText += `- File complaint against dowry harassment\n\n`
+  }
 
-    // Build context-specific recommendations
-    let recText = `**Immediate Actions Based on Your Situation:**\n\n`
-    
-    if (keywords.includes('marriage')) {
-      recText += `1. **Marriage-Related Actions**:\n`
-      recText += `   - Gather marriage certificate and related documents\n`
-      recText += `   - Document any incidents of abuse or harassment\n`
-      recText += `   - Consult a family lawyer\n`
-      recText += `   - Consider filing for protection orders if facing domestic violence\n\n`
-    }
-    
-    if (keywords.includes('consumer')) {
-      recText += `1. **Consumer-Related Actions**:\n`
-      recText += `   - Keep purchase receipts and warranty documents\n`
-      recText += `   - Document the defect or issue with photos/videos\n`
-      recText += `   - File complaint in Consumer Court within 2 years\n`
-      recText += `   - Contact seller/manufacturer first for resolution\n\n`
-    }
-    
-    if (keywords.includes('employment')) {
-      recText += `1. **Employment-Related Actions**:\n`
-      recText += `   - Keep employment contract and appointment letter\n`
-      recText += `   - Document salary slips and work records\n`
-      recText += `   - File complaint with Labor Commissioner\n`
-      recText += `   - Approach Labor Court for disputes\n\n`
-    }
-    
-    if (keywords.includes('property')) {
-      recText += `1. **Property-Related Actions**:\n`
-      recText += `   - Gather property documents (sale deed, rent agreement, etc.)\n`
-      recText += `   - Document any illegal actions (photos, videos)\n`
-      recText += `   - File case in appropriate court\n`
-      recText += `   - Seek interim relief if needed\n\n`
-    }
-    
-    let recNum = 1
-    if (keywords.length > 0) {
-      recNum = keywords.filter(k => ['marriage', 'consumer', 'employment', 'property'].includes(k)).length + 1
-    }
-    
-    recText += `${recNum}. **Gather Documentation**: Collect all relevant documents, evidence, and records related to your situation.\n\n`
-    recText += `${recNum + 1}. **Seek Legal Advice**:\n`
-    recText += `   - Contact a qualified lawyer specializing in your matter\n`
-    recText += `   - Approach Legal Services Authority for free legal aid (if eligible)\n`
-    recText += `   - Consult with legal aid clinics\n\n`
-    recText += `${recNum + 2}. **File Complaints**: If your rights are violated, file complaints with appropriate authorities.\n\n`
-    
-    if (keywords.includes('rti') || situation.toLowerCase().includes('information')) {
-      recText += `${recNum + 3}. **Use RTI**: File RTI application to get information from public authorities.\n\n`
-    }
+  if (keywords.includes('consumer')) {
+    optionsText += `**Option 1: Consumer Remedies**\n`
+    optionsText += `- File complaint in Consumer Court (District/State/National)\n`
+    optionsText += `- Seek refund/replacement/compensation\n`
+    optionsText += `- Approach Consumer Helpline (1800-11-4000)\n`
+    optionsText += `- File online complaint on consumer portal\n\n`
+  }
 
-    return {
-      rights: rightsText,
+  if (keywords.includes('employment')) {
+    optionsText += `**Option 1: Employment-Related Remedies**\n`
+    optionsText += `- File complaint with Labor Commissioner\n`
+    optionsText += `- Approach Industrial Tribunal/Labor Court\n`
+    optionsText += `- File complaint for sexual harassment (POSH Act)\n`
+    optionsText += `- Seek compensation for wrongful termination\n\n`
+  }
 
-      options: optionsText,
+  if (keywords.includes('property')) {
+    optionsText += `**Option 1: Property-Related Remedies**\n`
+    optionsText += `- File case in civil court for property disputes\n`
+    optionsText += `- Approach Rent Control Tribunal for tenant issues\n`
+    optionsText += `- File complaint for illegal eviction\n`
+    optionsText += `- Seek injunction orders if needed\n\n`
+  }
 
-      recommendations: recText,
+  let optionNum = 1
+  if (keywords.length > 0) {
+    optionNum = keywords.filter(k => ['marriage', 'consumer', 'employment', 'property'].includes(k)).length + 1
+  }
 
-      warnings: `**Important Warnings:**
+  optionsText += `**Option ${optionNum}: Seek Legal Assistance**\n`
+  optionsText += `- Contact Legal Services Authority for free legal aid (if eligible)\n`
+  optionsText += `- Consult with a qualified lawyer\n`
+  optionsText += `- Approach District Legal Services Authority (DLSA)\n`
+  optionsText += `- Use Lok Adalat for speedy resolution\n\n`
+
+  optionsText += `**Option ${optionNum + 1}: File Complaints**\n`
+  optionsText += `- File complaint with appropriate authority (police, consumer court, etc.)\n`
+  if (keywords.includes('rti') || lowerSituation.includes('information')) {
+    optionsText += `- Use Right to Information (RTI) to get information from public authorities\n`
+  }
+  optionsText += `- Approach relevant regulatory bodies\n\n`
+
+  optionsText += `**Option ${optionNum + 2}: Document Everything**\n`
+  optionsText += `- Keep records of all communications and documents\n`
+  optionsText += `- Maintain evidence (photos, videos, receipts, etc.)\n`
+  optionsText += `- Keep copies of all relevant legal documents\n\n`
+
+  optionsText += `**Option ${optionNum + 3}: Approach Courts**\n`
+  optionsText += `- File a writ petition in High Court or Supreme Court (for fundamental rights violations)\n`
+  optionsText += `- Approach appropriate courts for civil/criminal matters\n`
+
+  let recText = `**Immediate Actions Based on Your Situation:**\n\n`
+
+  if (keywords.includes('marriage')) {
+    recText += `1. **Marriage-Related Actions**:\n`
+    recText += `   - Gather marriage certificate and related documents\n`
+    recText += `   - Document any incidents of abuse or harassment\n`
+    recText += `   - Consult a family lawyer\n`
+    recText += `   - Consider filing for protection orders if facing domestic violence\n\n`
+  }
+
+  if (keywords.includes('consumer')) {
+    recText += `1. **Consumer-Related Actions**:\n`
+    recText += `   - Keep purchase receipts and warranty documents\n`
+    recText += `   - Document the defect or issue with photos/videos\n`
+    recText += `   - File complaint in Consumer Court within 2 years\n`
+    recText += `   - Contact seller/manufacturer first for resolution\n\n`
+  }
+
+  if (keywords.includes('employment')) {
+    recText += `1. **Employment-Related Actions**:\n`
+    recText += `   - Keep employment contract and appointment letter\n`
+    recText += `   - Document salary slips and work records\n`
+    recText += `   - File complaint with Labor Commissioner\n`
+    recText += `   - Approach Labor Court for disputes\n\n`
+  }
+
+  if (keywords.includes('property')) {
+    recText += `1. **Property-Related Actions**:\n`
+    recText += `   - Gather property documents (sale deed, rent agreement, etc.)\n`
+    recText += `   - Document any illegal actions (photos, videos)\n`
+    recText += `   - File case in appropriate court\n`
+    recText += `   - Seek interim relief if needed\n\n`
+  }
+
+  let recNum = 1
+  if (keywords.length > 0) {
+    recNum = keywords.filter(k => ['marriage', 'consumer', 'employment', 'property'].includes(k)).length + 1
+  }
+
+  recText += `${recNum}. **Gather Documentation**: Collect all relevant documents, evidence, and records related to your situation.\n\n`
+  recText += `${recNum + 1}. **Seek Legal Advice**:\n`
+  recText += `   - Contact a qualified lawyer specializing in your matter\n`
+  recText += `   - Approach Legal Services Authority for free legal aid (if eligible)\n`
+  recText += `   - Consult with legal aid clinics\n\n`
+  recText += `${recNum + 2}. **File Complaints**: If your rights are violated, file complaints with appropriate authorities.\n\n`
+
+  if (keywords.includes('rti') || lowerSituation.includes('information')) {
+    recText += `${recNum + 3}. **Use RTI**: File RTI application to get information from public authorities.\n\n`
+  }
+
+  return {
+    rights: rightsText,
+    options: optionsText,
+    recommendations: recText,
+    warnings: `**Important Warnings:**
 
 ⚠️ **Time-Sensitive**: Legal proceedings have strict deadlines. If you receive any legal notice or summons, respond within the specified timeframe.
 
@@ -254,8 +246,7 @@ export const legalRightsService = {
 ⚠️ **Limitation Period**: Be aware of limitation periods for filing cases. Different laws have different time limits.
 
 ⚠️ **Jurisdiction**: Ensure you approach the correct court or authority with proper jurisdiction over your matter.`,
-
-      nextSteps: `**Your Next Steps:**
+    nextSteps: `**Your Next Steps:**
 
 1. **Today**: 
    - Document your situation thoroughly
@@ -286,8 +277,46 @@ export const legalRightsService = {
    - Consumer Courts (for consumer disputes)
    - RTI Act (for information from public authorities)
    - Human Rights Commission (for human rights violations)
-   - Know Your Rights section (comprehensive rights reference)`
+   - Know Your Rights section (comprehensive rights reference)`,
+  }
+}
+
+export const legalRightsService = {
+  async analyzeSituation(situation) {
+    if (isOpenAIEnabled) {
+      try {
+        const messages = [
+          {
+            role: 'system',
+            content:
+              'You are Apka Vakeel, an Indian legal rights advisor. Respond in JSON only (no prose, no markdown) with keys: rights, options, recommendations, warnings, nextSteps. Base your answer strictly on Indian laws and rights. Use clear, concise language and add disclaimers reminding users to consult qualified lawyers for complex matters.',
+          },
+          {
+            role: 'user',
+            content: `User situation:\n${situation}\n\nProvide guidance personalized to this scenario.`,
+          },
+        ]
+
+        const aiResponse = await callOpenAIChat(messages, { temperature: 0.2 })
+        const parsed = parseJSONFromAI(aiResponse)
+
+        if (parsed?.rights) {
+          return {
+            rights: parsed.rights,
+            options: parsed.options || '',
+            recommendations: parsed.recommendations || '',
+            warnings: parsed.warnings || '',
+            nextSteps: parsed.nextSteps || '',
+          }
+        }
+      } catch (error) {
+        console.error('OpenAI legal analysis failed, falling back to mock data.', error)
+      }
+    } else {
+      await new Promise(resolve => setTimeout(resolve, MOCK_DELAY))
     }
+
+    return buildMockResponse(situation)
   }
 }
 

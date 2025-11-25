@@ -82,43 +82,35 @@ apka-vakeel/
 └── tailwind.config.js
 ```
 
-## AI Integration
+## AI Integration (OpenAI GPT-4)
 
-Currently, the application uses mock services for demonstration. To integrate with actual AI services:
+Apka Vakeel now supports real-time AI responses using the OpenAI GPT-4 API for:
+- **Legal Rights Analysis** (context-aware responses)
+- **Document Generation** (custom legal documents)
 
-1. **OpenAI Integration**: Update `legalService.js` and `documentService.js` to use OpenAI API
-2. **Anthropic Claude**: Similar integration pattern
-3. **Custom Backend**: Create a backend API that handles AI requests
+### Quick Setup
 
-### Example Integration (OpenAI)
+1. **Install dependencies** (already done): `npm install`
+2. **Create `.env` file** at the project root based on `.env.example`
+3. **Add your OpenAI API key**:
+   ```
+   VITE_OPENAI_API_KEY=sk-xxxx
+   VITE_OPENAI_MODEL=gpt-4o-mini   # optional, defaults to gpt-4o-mini
+   ```
+4. **Run the app**: `npm run dev`
 
-```javascript
-// In legalService.js
-const response = await fetch('https://api.openai.com/v1/chat/completions', {
-  method: 'POST',
-  headers: {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
-  },
-  body: JSON.stringify({
-    model: 'gpt-4',
-    messages: [
-      { role: 'system', content: 'You are a legal rights advisor...' },
-      { role: 'user', content: situation }
-    ]
-  })
-})
-```
+> ⚠️ **Security Note:** The current integration calls OpenAI directly from the frontend. For production use, proxy requests through a secure backend so your API key remains private.
 
 ## Environment Variables
 
-Create a `.env` file for API keys:
+Copy `.env.example` to `.env` and add your credentials:
 
 ```
-VITE_OPENAI_API_KEY=your_key_here
-# or
-VITE_ANTHROPIC_API_KEY=your_key_here
+VITE_OPENAI_API_KEY=your_openai_api_key
+VITE_OPENAI_MODEL=gpt-4o-mini   # optional override
 ```
+
+> Remove `.env` from version control. Do not commit API keys.
 
 ## Legal Disclaimer
 

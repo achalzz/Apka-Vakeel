@@ -1,29 +1,40 @@
 // Document Generation Service
 // This service handles AI-powered legal document generation
 
-// For now, this is a mock service that simulates AI responses
-// In production, this would connect to an actual AI API (OpenAI, Anthropic, etc.)
+import { callOpenAIChat, isOpenAIEnabled } from './openAIClient'
 
-const MOCK_DELAY = 2500 // Simulate API delay
+const MOCK_DELAY = 2000 // Simulate API delay when AI is unavailable
 
 export const documentService = {
   async generateDocument(type, details) {
-    // Simulate API call delay
-    await new Promise(resolve => setTimeout(resolve, MOCK_DELAY))
+    if (isOpenAIEnabled) {
+      try {
+        const messages = [
+          {
+            role: 'system',
+            content:
+              'You are an Indian legal document assistant. Generate professional, ready-to-use legal documents in plain text. Include sections, placeholders, and Indian legal considerations. Never include markdown or code blocks—return plain text only.',
+          },
+          {
+            role: 'user',
+            content: `Document type: ${type}\nDetails provided by user:\n${details || 'No additional details provided.'}\n\nGenerate a complete document tailored for Indian legal context.`,
+          },
+        ]
 
-    // Mock response - In production, this would be an actual AI API call
-    // Example: OpenAI GPT-4, Anthropic Claude, etc.
-    
-    // For demonstration, return a structured mock response
-    // Replace this with actual API integration:
-    /*
-    const response = await fetch('/api/documents/generate', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, details })
-    })
-    return await response.json()
-    */
+        const aiResponse = await callOpenAIChat(messages, { temperature: 0.3 })
+        if (aiResponse) {
+          return {
+            type,
+            content: aiResponse.trim(),
+            generatedAt: new Date().toISOString(),
+          }
+        }
+      } catch (error) {
+        console.error('OpenAI document generation failed, falling back to template.', error)
+      }
+    } else {
+      await new Promise(resolve => setTimeout(resolve, MOCK_DELAY))
+    }
 
     // Generate mock document based on type
     const documentTemplates = {
