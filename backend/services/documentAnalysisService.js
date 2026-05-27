@@ -2,9 +2,15 @@ const { PDFParse } = require("pdf-parse");
 const Groq = require("groq-sdk");
 require("dotenv").config();
 
-const groq = new Groq({
-    apiKey: process.env.GROQ_API_KEY,
-});
+function getGroqClient() {
+    if (!process.env.GROQ_API_KEY) {
+        throw new Error("GROQ_API_KEY is not configured");
+    }
+
+    return new Groq({
+        apiKey: process.env.GROQ_API_KEY,
+    });
+}
 
 async function analyzeDocument(fileBuffer) {
     const parser = new PDFParse({ data: fileBuffer });
@@ -16,7 +22,7 @@ async function analyzeDocument(fileBuffer) {
         throw new Error("Could not extract text from the PDF. The document may be scanned or image-based.");
     }
 
-    const response = await groq.chat.completions.create({
+    const response = await getGroqClient().chat.completions.create({
         model: "llama-3.3-70b-versatile",
         messages: [
             {
