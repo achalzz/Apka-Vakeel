@@ -2,6 +2,10 @@
 
 An AI-powered legal assistance platform designed to provide accessible legal guidance and document generation services.
 
+## Live Demo
+
+Visit the deployed application: [https://apka-vakeel.netlify.app](https://apka-vakeel.netlify.app)
+
 ## Project Overview
 
 Apka Vakeel is a comprehensive full-stack application that leverages AI to help users understand their legal rights, analyze documents, and generate legal documents. The platform consists of:
@@ -70,7 +74,7 @@ apka-vakeel/
 
 1. **Clone the repository**
 ```bash
-git clone https://github.com/achalzz/Apka-Vakeel.git
+git clone https://github.com/achalzz/apka-vakeel.git
 cd apka-vakeel
 ```
 
@@ -180,7 +184,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Contact
 
-For more information, visit the [GitHub repository](https://github.com/achalzz/Apka-Vakeel).
+For more information, visit the [GitHub repository](https://github.com/achalzz/apka-vakeel).
 
 ---
 
