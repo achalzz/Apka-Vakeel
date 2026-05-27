@@ -102,7 +102,7 @@ NODE_ENV=development
 
 #### Frontend (.env.local)
 ```
-NEXT_PUBLIC_API_URL=http://localhost:3001
+NEXT_PUBLIC_API_URL=http://localhost:5000
 ```
 
 ## Running the Application
@@ -113,7 +113,7 @@ NEXT_PUBLIC_API_URL=http://localhost:3001
 ```bash
 cd backend
 npm start
-# Server runs on http://localhost:3001
+# Server runs on http://localhost:5000
 ```
 
 **Terminal 2 - Frontend**

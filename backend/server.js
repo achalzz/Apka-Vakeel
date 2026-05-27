@@ -17,7 +17,11 @@ require("./routes/rightRoutes");
 
 const app = express();
 
-app.use(cors());
+const corsOrigin = process.env.CORS_ORIGIN;
+
+app.use(cors({
+    origin: corsOrigin ? corsOrigin.split(",").map((origin) => origin.trim()) : "*",
+}));
 
 app.use(express.json());
 
@@ -63,9 +67,10 @@ app.get("/", (req,res)=>{
 
 
 
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+const HOST = "0.0.0.0";
 
-app.listen(PORT,()=>{
+app.listen(PORT,HOST,()=>{
 
     console.log(
         `Server running on port ${PORT}`
