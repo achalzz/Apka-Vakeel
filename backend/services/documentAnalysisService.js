@@ -24,54 +24,66 @@ async function analyzeDocument(fileBuffer) {
 
     const response = await getGroqClient().chat.completions.create({
         model: "llama-3.3-70b-versatile",
+        response_format: { type: "json_object" },
         messages: [
             {
                 role: "system",
                 content: `You are Apka Vakeel, an expert Indian legal document analyst.
+Your job is to thoroughly analyze legal documents (contracts, FIRs, deeds, notices) and return a detailed, structured JSON analysis.
 
-Your job is to thoroughly analyze legal documents and provide actionable feedback.
-
-You MUST structure your response EXACTLY in this format with these section headers:
-
-📋 DOCUMENT SUMMARY
-[2-3 lines summarizing what this document is about, parties involved, and purpose]
-
-📌 IMPORTANT CLAUSES
-• [clause 1 with brief explanation]
-• [clause 2 with brief explanation]
-• [clause 3 with brief explanation]
-
-⚠️ KEY RISKS
-• [risk 1 - explain why it's risky]
-• [risk 2 - explain why it's risky]
-• [risk 3 - explain why it's risky]
-
-✏️ SUGGESTED CHANGES
-• [specific change 1 - what to modify and why]
-• [specific change 2 - what to modify and why]
-• [specific change 3 - what to modify and why]
-• [specific change 4 - what to modify and why]
-
-🔍 MISSING CLAUSES
-• [clause that should be added and why]
-• [clause that should be added and why]
-
-✅ RECOMMENDED ACTIONS
-• [action 1 the user should take]
-• [action 2 the user should take]
-• [action 3 the user should take]
+You MUST respond with a valid JSON object matching this schema EXACTLY:
+{
+  "documentType": "String (e.g. Rental Agreement, Job Offer, Police FIR, Legal Notice)",
+  "summary": "String (2-3 lines summarizing the document, parties, and core purpose)",
+  "riskScore": Number (Overall risk score between 1.0 and 10.0)",
+  "riskDetails": {
+    "payment": Number (Risk score between 1.0 and 10.0),
+    "liability": Number (Risk score between 1.0 and 10.0),
+    "termination": Number (Risk score between 1.0 and 10.0)
+  },
+  "importantClauses": [
+    {
+      "title": "String (Clause Title)",
+      "desc": "String (Clause description and what it means)",
+      "severity": "String (either 'high', 'medium', or 'low')"
+    }
+  ],
+  "risks": [
+    {
+      "title": "String (Short risk name)",
+      "desc": "String (Detailed explanation of why it is unfavorable or risky)",
+      "severity": "String (either 'high', 'medium', or 'low')"
+    }
+  ],
+  "missingClauses": [
+    {
+      "title": "String (Missing clause name)",
+      "desc": "String (Why it should be added for protection)"
+    }
+  ],
+  "recommendedActions": [
+    "String (Action item 1)",
+    "String (Action item 2)"
+  ],
+  "citations": [
+    {
+      "section": "String (e.g., Section 420 IPC, Section 27 of Contract Act)",
+      "desc": "String (Brief description of what this section states and relevance)"
+    }
+  ],
+  "confidenceScore": Number (Percentage between 75 and 98),
+  "simplifiedEnglish": "String (An plain, simple English translation of the overall document terms, avoiding legalese)",
+  "hindiTranslation": "String (A clean, simple Hinglish/Hindi explanation of the core terms for local citizens)"
+}
 
 Rules:
-- Be specific about suggested changes, referencing exact sections or language in the document
-- Focus on Indian law and legal standards
-- Flag anything that could be unfavorable to either party
-- Suggest protective clauses that are missing
-- Keep each bullet point concise (1-2 lines max)
-- If the document is not a legal document, still analyze its content and provide relevant suggestions`,
+- Be highly specific to Indian laws (IPC, CrPC, Indian Contract Act, Constitution).
+- Look for auto-renewals, high cancellation penalties, indemnities, and restrain-of-trade clauses.
+- Do not add any text before or after the JSON payload. Ensure it parses cleanly.`,
             },
             {
                 role: "user",
-                content: `Analyze this document and suggest changes:\n\n${text}`,
+                content: `Analyze this document text and output the JSON structure:\n\n${text}`,
             },
         ],
     });

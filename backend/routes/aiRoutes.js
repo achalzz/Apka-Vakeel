@@ -28,20 +28,38 @@ router.post("/chat", async (req, res) => {
         // Ask AI
         const response = await askLegalAI(question);
 
+        let parsedData = null;
+        try {
+            parsedData = JSON.parse(response);
+        } catch (jsonErr) {
+            console.warn("Failed to parse AI JSON response, using fallback:", jsonErr.message);
+            parsedData = {
+                isCasual: false,
+                response: response,
+                simplifiedEnglish: response,
+                hindiTranslation: "",
+                citations: [],
+                confidenceScore: 85,
+                suggestedNextSteps: []
+            };
+        }
 
         let chat = null;
 
         try {
-            // Temporary demo user
-            let user = await prisma.user.findFirst();
+            // Retrieve or upsert the user from authenticated request
+            let user = await prisma.user.findUnique({
+                where: { id: req.user.id }
+            });
 
             if (!user) {
 
                 user = await prisma.user.create({
 
                     data: {
-                        email: "demo@apkavakeel.com",
-                        name: "Demo User"
+                        id: req.user.id,
+                        email: req.user.email,
+                        name: req.user.name
                     }
 
                 });
@@ -49,12 +67,12 @@ router.post("/chat", async (req, res) => {
             }
 
 
-            // Save chat
+            // Save chat (stores raw stringified JSON in response field)
             chat = await prisma.chat.create({
 
                 data: {
                     question,
-                    response,
+                    response: response,
                     userId: user.id
                 }
 
@@ -67,7 +85,7 @@ router.post("/chat", async (req, res) => {
         res.json({
 
             success: true,
-            response,
+            data: parsedData,
             chatId: chat?.id || null
 
         });
@@ -98,28 +116,53 @@ router.post("/chat", async (req, res) => {
 // Get chat history
 // =====================
 
-router.get("/history", async(req,res)=>{
+router.get("/history", async (req, res) => {
 
-    try{
+    try {
 
         const chats = await prisma.chat.findMany({
 
+            where: { userId: req.user.id },
             orderBy:{
                 createdAt:"desc"
             }
 
         });
 
+        const parsedChats = chats.map(chat => {
+            let parsedResponse = chat.response;
+            try {
+                parsedResponse = JSON.parse(chat.response);
+            } catch (e) {
+                parsedResponse = {
+                    isCasual: false,
+                    response: chat.response,
+                    simplifiedEnglish: chat.response,
+                    hindiTranslation: "",
+                    citations: [],
+                    confidenceScore: 85,
+                    suggestedNextSteps: []
+                };
+            }
+            return {
+                id: chat.id,
+                question: chat.question,
+                response: parsedResponse.response || chat.response, // Standard markdown answer fallback
+                data: parsedResponse,
+                createdAt: chat.createdAt
+            };
+        });
+
         res.json({
 
             success:true,
-            chats
+            chats: parsedChats
 
         });
 
     }
 
-    catch(error){
+    catch (error) {
 
         console.error(
             "History Error:",
@@ -128,8 +171,8 @@ router.get("/history", async(req,res)=>{
 
         res.json({
 
-            success:true,
-            chats:[]
+            success: true,
+            chats: []
 
         });
 
