@@ -16,6 +16,15 @@ Requirements:
 
     const response = await askLegalAI(prompt);
 
+    try {
+        const parsed = JSON.parse(response);
+        if (parsed && parsed.response) {
+            return parsed.response;
+        }
+    } catch (e) {
+        console.warn("generateDocument did not receive JSON, using raw response");
+    }
+
     return response;
 }
 
